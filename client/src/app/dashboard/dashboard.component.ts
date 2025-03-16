@@ -1,4 +1,14 @@
 import { Component, OnInit } from '@angular/core';
+import { DomainService } from '../core/services/domain.service';
+import { ControlService } from '../core/services/control.service';
+import { forkJoin } from 'rxjs';
+
+interface DomainCompliance {
+  name: string;
+  value: number;
+  domain_id: string;
+  totalControls: number;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -8,23 +18,16 @@ import { Component, OnInit } from '@angular/core';
 export class DashboardComponent implements OnInit {
   // Compliance summary data
   complianceSummary = {
-    overall: 68,
-    byDomain: [
-      { name: 'Access Control', value: 75 },
-      { name: 'Asset Management', value: 60 },
-      { name: 'Audit & Accountability', value: 82 },
-      { name: 'Configuration Management', value: 55 },
-      { name: 'Identification & Authentication', value: 70 },
-      { name: 'Incident Response', value: 65 },
-      { name: 'Maintenance', value: 50 },
-      { name: 'Media Protection', value: 80 },
-      { name: 'Personnel Security', value: 90 },
-      { name: 'Physical Protection', value: 85 },
-      { name: 'Risk Assessment', value: 60 },
-      { name: 'Security Assessment', value: 70 },
-      { name: 'System & Communications Protection', value: 65 },
-      { name: 'System & Information Integrity', value: 55 }
-    ]
+    overall: 0,
+    byDomain: [] as DomainCompliance[]
+  };
+
+  // Controls by level
+  controlsByLevel = {
+    level1: 0,
+    level2: 0,
+    level3: 0,
+    total: 0
   };
 
   // Recent activities
@@ -43,9 +46,68 @@ export class DashboardComponent implements OnInit {
     low: 12
   };
 
-  constructor() { }
+  // Loading state
+  isLoading = true;
+  loadingError = false;
+
+  constructor(
+    private domainService: DomainService,
+    private controlService: ControlService
+  ) { }
 
   ngOnInit(): void {
-    // In a real app, we would fetch this data from a service
+    this.loadDashboardData();
+  }
+
+  loadDashboardData(): void {
+    this.isLoading = true;
+    this.loadingError = false;
+
+    // Load domains and controls data simultaneously
+    forkJoin({
+      domains: this.domainService.getDomains(),
+      controls: this.controlService.getControls()
+    }).subscribe({
+      next: (result) => {
+        const { domains, controls } = result;
+        
+        // Process domains and controls data
+        this.processDomainControlsData(domains, controls);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading dashboard data:', error);
+        this.loadingError = true;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  processDomainControlsData(domains: any[], controls: any[]): void {
+    // Count controls by level
+    this.controlsByLevel.level1 = controls.filter(c => c.cmmc_level === '1').length;
+    this.controlsByLevel.level2 = controls.filter(c => c.cmmc_level === '2').length;
+    this.controlsByLevel.level3 = controls.filter(c => c.cmmc_level === '3').length;
+    this.controlsByLevel.total = controls.length;
+
+    // Calculate overall percentage (mock calculation)
+    this.complianceSummary.overall = Math.round(
+      (this.controlsByLevel.level1 + this.controlsByLevel.level2) / 
+      this.controlsByLevel.total * 100
+    );
+
+    // Process domain compliance (mock data for now)
+    this.complianceSummary.byDomain = domains.map(domain => {
+      const domainControls = controls.filter(c => c.domain_id === domain.domain_id);
+      // Mock random compliance percentage per domain between 50-90%
+      const value = Math.floor(Math.random() * 40) + 50;
+      
+      return {
+        name: domain.name,
+        value: value,
+        domain_id: domain.domain_id,
+        totalControls: domainControls.length
+      };
+    });
   }
 } 

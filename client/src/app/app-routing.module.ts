@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 // Components
 import { LoginComponent } from './auth/login/login.component';
+import { RegisterComponent } from './auth/register/register.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { DomainsComponent } from './compliance/domains/domains.component';
@@ -18,6 +19,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
   {
     path: '',
     component: MainLayoutComponent,

@@ -1,0 +1,104 @@
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col">
+      <h1>CMMC Controls</h1>
+      <p class="text-muted">View and manage CMMC controls for your organization's compliance program.</p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <label for="domainFilter" class="form-label">Filter by Domain</label>
+      <select id="domainFilter" class="form-select" [(ngModel)]="selectedDomain" (change)="onDomainChange()">
+        <option value="">All Domains</option>
+        <option *ngFor="let domain of domains" [value]="domain.domain_id">
+          {{ domain.domain_id }} - {{ domain.name }}
+        </option>
+      </select>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+      <label for="levelFilter" class="form-label">Filter by Level</label>
+      <select id="levelFilter" class="form-select" [(ngModel)]="selectedLevel" (change)="onLevelChange()">
+        <option value="">All Levels</option>
+        <option *ngFor="let option of levelOptions" [value]="option.value">
+          {{ option.display }}
+        </option>
+      </select>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+      <label for="searchControl" class="form-label">Search Controls</label>
+      <input
+        type="text"
+        id="searchControl"
+        class="form-control"
+        placeholder="Search by ID, name, or description"
+        [formControl]="searchControl"
+      />
+    </div>
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading controls...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    {{ error }}
+  </div>
+
+  <!-- No results -->
+  <div *ngIf="!loading && !error && filteredControls.length === 0" class="alert alert-info" role="alert">
+    No controls found matching your criteria. Try adjusting your filters.
+  </div>
+
+  <!-- Controls list -->
+  <div *ngIf="!loading && !error && filteredControls.length > 0">
+    <div class="card mb-4" *ngFor="let control of filteredControls">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ control.control_id }}: {{ control.name }}</h5>
+        <span class="badge bg-primary">Level {{ control.cmmc_level }}</span>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <span class="badge bg-secondary me-2">{{ control.domain_id }}</span>
+          <span class="text-muted">{{ getDomainName(control.domain_id) }}</span>
+        </div>
+        <p>{{ control.description }}</p>
+        
+        <div class="accordion" id="control{{ control.id }}Accordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingObjective{{ control.id }}">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" [attr.data-bs-target]="'#collapseObjective' + control.id" aria-expanded="false" [attr.aria-controls]="'collapseObjective' + control.id">
+                Assessment Objective
+              </button>
+            </h2>
+            <div id="collapseObjective{{ control.id }}" class="accordion-collapse collapse" [attr.aria-labelledby]="'headingObjective' + control.id" data-bs-parent="#control{{ control.id }}Accordion">
+              <div class="accordion-body">
+                {{ control.assessment_objective }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingDiscussion{{ control.id }}">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" [attr.data-bs-target]="'#collapseDiscussion' + control.id" aria-expanded="false" [attr.aria-controls]="'collapseDiscussion' + control.id">
+                Discussion
+              </button>
+            </h2>
+            <div id="collapseDiscussion{{ control.id }}" class="accordion-collapse collapse" [attr.aria-labelledby]="'headingDiscussion' + control.id" data-bs-parent="#control{{ control.id }}Accordion">
+              <div class="accordion-body">
+                {{ control.discussion }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

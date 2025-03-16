@@ -1,92 +1,109 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-interface LoginResponse {
-  token: string;
-  user: any;
+interface User {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+}
+
+interface AuthResponse {
+  user: User;
+  tokens: {
+    access: string;
+    refresh: string;
+  }
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<any>(null);
+  private apiUrl = environment.apiUrl;
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-  private apiUrl = `${environment.apiUrl}/auth`;
-
+  
   constructor(private http: HttpClient) {
-    this.initializeFromLocalStorage();
+    this.loadUserFromStorage();
   }
-
-  private initializeFromLocalStorage(): void {
-    const token = localStorage.getItem('token');
-    if (token) {
+  
+  private loadUserFromStorage(): void {
+    const token = localStorage.getItem('access_token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
       try {
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-        this.currentUserSubject.next({
-          email: tokenPayload.email,
-          role: tokenPayload.role,
-          organizationId: tokenPayload.organizationId
-        });
+        this.currentUserSubject.next(JSON.parse(user));
       } catch (error) {
-        console.error('Error parsing token', error);
+        console.error('Error parsing user from localStorage', error);
         this.logout();
       }
     }
   }
-
-  login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { email, password })
+  
+  login(email: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, { email, password })
       .pipe(
         tap(response => {
-          // Store token
-          localStorage.setItem('token', response.token);
-          
-          // Parse user info from token
-          try {
-            const tokenPayload = JSON.parse(atob(response.token.split('.')[1]));
-            this.currentUserSubject.next({
-              email: tokenPayload.email,
-              role: tokenPayload.role,
-              organizationId: tokenPayload.organizationId
-            });
-          } catch (error) {
-            console.error('Error parsing token', error);
-          }
+          localStorage.setItem('access_token', response.tokens.access);
+          localStorage.setItem('refresh_token', response.tokens.refresh);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          this.currentUserSubject.next(response.user);
+        }),
+        catchError(error => {
+          return throwError(() => new Error(error.error?.message || 'Login failed'));
         })
       );
   }
-
-  register(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, userData);
+  
+  register(name: string, email: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, { name, email, password })
+      .pipe(
+        catchError(error => {
+          return throwError(() => new Error(error.error?.message || 'Registration failed'));
+        })
+      );
   }
-
+  
+  refreshToken(): Observable<{access: string}> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+    
+    return this.http.post<{access: string}>(`${this.apiUrl}/auth/refresh-token`, { refreshToken })
+      .pipe(
+        tap(response => {
+          localStorage.setItem('access_token', response.access);
+        }),
+        catchError(error => {
+          this.logout();
+          return throwError(() => new Error('Session expired. Please login again.'));
+        })
+      );
+  }
+  
   logout(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
     this.currentUserSubject.next(null);
   }
-
+  
   isLoggedIn(): boolean {
-    const token = localStorage.getItem('token');
-    if (!token) return false;
-
-    try {
-      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = tokenPayload.exp * 1000; // Convert to milliseconds
-      return Date.now() < expiry;
-    } catch (error) {
-      return false;
-    }
+    return !!localStorage.getItem('access_token');
   }
-
+  
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return localStorage.getItem('access_token');
   }
-
-  getCurrentUser(): any {
+  
+  getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 } 

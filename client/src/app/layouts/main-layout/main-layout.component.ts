@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -20,20 +21,26 @@ export class MainLayoutComponent implements OnInit {
     { label: 'Assessments', icon: 'assessment', route: '/assessments' }
   ];
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
-    // Get user info from token
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const tokenData = JSON.parse(atob(token.split('.')[1]));
-        this.userName = tokenData.email || 'User';
-        this.userRole = tokenData.role || 'User';
-      } catch (error) {
-        console.error('Error parsing token', error);
-      }
+    // Get user info from AuthService
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      this.userName = currentUser.name || currentUser.email || 'User';
+      this.userRole = currentUser.role || 'User';
     }
+    
+    // Subscribe to user changes
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.userName = user.name || user.email || 'User';
+        this.userRole = user.role || 'User';
+      }
+    });
   }
 
   toggleMenu(): void {
@@ -41,7 +48,7 @@ export class MainLayoutComponent implements OnInit {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 } 

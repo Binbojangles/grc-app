@@ -1,37 +1,34 @@
-FROM node:16-alpine as build
+FROM node:18-slim
 
+# Create app directory
 WORKDIR /usr/src/app
 
-# Install dependencies first (for better caching)
+# Install app dependencies for the Node.js server
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
-# Copy and build client
-COPY client/package*.json ./client/
-RUN cd client && npm install
+# Build the Angular client
+WORKDIR /usr/src/app/client
+COPY client/package*.json ./
+RUN npm install
 
-COPY client/ ./client/
-RUN cd client && npm run build
+# Copy client source and build
+COPY client/ ./
+RUN npm run build
 
-# Copy backend code
+# Return to main directory and copy server source
+WORKDIR /usr/src/app
 COPY . .
 
-# Second stage: runtime
-FROM node:16-alpine
+# Copy .env.example to .env if .env doesn't exist
+RUN if [ ! -f .env ]; then cp .env.example .env || echo "No .env.example file found"; fi
 
-WORKDIR /usr/src/app
+# Setup the database
+RUN mkdir -p database/seeds
+RUN npm run setup:db || echo "Database setup will be performed at runtime"
 
-# Copy built client and backend
-COPY --from=build /usr/src/app/package*.json ./
-COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/server.js ./
-COPY --from=build /usr/src/app/app ./app
-COPY --from=build /usr/src/app/client/dist/client ./client/dist
-
-# Expose application port
+# Expose port
 EXPOSE 5000
 
-# Run the application with limited privileges
-USER node
-
+# Start the application
 CMD ["npm", "start"]

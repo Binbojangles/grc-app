@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -25,11 +25,33 @@ export class ControlService {
   constructor(private http: HttpClient) { }
 
   getControls(params?: any): Observable<Control[]> {
-    return this.http.get<Control[]>(this.apiUrl, { params });
+    let httpParams = new HttpParams();
+    
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    
+    return this.http.get<Control[]>(this.apiUrl, { params: httpParams });
   }
 
-  getControl(id: string): Observable<Control> {
+  getControlById(id: string): Observable<Control> {
     return this.http.get<Control>(`${this.apiUrl}/${id}`);
+  }
+
+  createControl(control: Partial<Control>): Observable<Control> {
+    return this.http.post<Control>(this.apiUrl, control);
+  }
+
+  updateControl(id: string, control: Partial<Control>): Observable<Control> {
+    return this.http.put<Control>(`${this.apiUrl}/${id}`, control);
+  }
+
+  deleteControl(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   getControlsByDomain(domainId: string): Observable<Control[]> {
@@ -39,6 +61,4 @@ export class ControlService {
   getControlsByLevel(level: string): Observable<Control[]> {
     return this.http.get<Control[]>(this.apiUrl, { params: { level } });
   }
-
-  // In a real app, we would have methods for creating, updating, and deleting controls
 } 

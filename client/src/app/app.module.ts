@@ -2,7 +2,9 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 // Angular Material Imports
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -28,6 +30,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 // Charts
 import { NgChartsModule } from 'ng2-charts';
@@ -40,6 +43,7 @@ import { AppComponent } from './app.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { LoginComponent } from './auth/login/login.component';
+import { RegisterComponent } from './auth/register/register.component';
 import { DomainsComponent } from './compliance/domains/domains.component';
 import { ControlsComponent } from './compliance/controls/controls.component';
 import { AssetsComponent } from './assets/assets.component';
@@ -57,6 +61,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     MainLayoutComponent,
     DashboardComponent,
     LoginComponent,
+    RegisterComponent,
     DomainsComponent,
     ControlsComponent,
     AssetsComponent,
@@ -68,9 +73,12 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
   imports: [
     BrowserModule,
     AppRoutingModule,
+    RouterModule,
     BrowserAnimationsModule,
     HttpClientModule,
+    FormsModule,
     ReactiveFormsModule,
+    CommonModule,
     // Material Modules
     MatToolbarModule,
     MatSidenavModule,
@@ -95,6 +103,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     MatExpansionModule,
     MatChipsModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
     // Charts
     NgChartsModule
   ],

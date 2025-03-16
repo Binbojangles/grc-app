@@ -1,0 +1,41 @@
+.navbar-brand {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.active {
+  font-weight: 600;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: white;
+  }
+}
+
+.nav-link {
+  transition: color 0.2s ease;
+  padding: 0.5rem 1rem;
+  margin-right: 0.25rem;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+}
+
+.navbar-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-outline-light {
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: white;
+    color: white;
+  }
+} 

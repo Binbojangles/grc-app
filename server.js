@@ -54,14 +54,25 @@ app.get('/api/health', (req, res) => {
 // Serve Angular app in production
 if (process.env.NODE_ENV === 'production') {
   // Serve static files from the Angular app
-  app.use(express.static(path.join(__dirname, 'client/dist')));
+  app.use(express.static(path.join(__dirname, 'client/dist/grc-cmmc-client')));
 
   // Handle Angular routing
-  app.get('*', (req, res) => {
+  app.get('*', (req, res, next) => {
     if (req.url.startsWith('/api')) {
       return next();
     }
-    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+    res.sendFile(path.join(__dirname, 'client/dist/grc-cmmc-client/index.html'));
+  });
+} else {
+  // In development, serve static files too (so we can run everything in one container for testing)
+  app.use(express.static(path.join(__dirname, 'client/dist/grc-cmmc-client')));
+  
+  // Handle Angular routing in development
+  app.get('*', (req, res, next) => {
+    if (req.url.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(__dirname, 'client/dist/grc-cmmc-client/index.html'));
   });
 }
 

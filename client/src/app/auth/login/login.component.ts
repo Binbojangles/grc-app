@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +17,7 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar
@@ -33,7 +33,7 @@ export class LoginComponent implements OnInit {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
     
     // Check if already logged in
-    if (localStorage.getItem('token')) {
+    if (this.authService.isLoggedIn()) {
       this.router.navigate([this.returnUrl]);
     }
   }
@@ -44,18 +44,17 @@ export class LoginComponent implements OnInit {
     }
 
     this.isLoading = true;
+    const { email, password } = this.loginForm.value;
     
-    this.http.post<{token: string}>('/api/auth/login', this.loginForm.value)
+    this.authService.login(email, password)
       .subscribe({
-        next: (response) => {
-          // Store token and navigate to return URL
-          localStorage.setItem('token', response.token);
+        next: () => {
           this.router.navigate([this.returnUrl]);
         },
         error: (error) => {
           this.isLoading = false;
           this.snackBar.open(
-            error.error?.message || 'Login failed. Please check your credentials.',
+            error.message || 'Login failed. Please check your credentials.',
             'Close',
             { duration: 5000 }
           );

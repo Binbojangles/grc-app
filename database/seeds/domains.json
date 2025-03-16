@@ -1,0 +1,87 @@
+[
+  {
+    "domain_id": "AC",
+    "name": "Access Control",
+    "description": "Limit system access to authorized users, processes, and devices, and to authorized activities and transactions."
+  },
+  {
+    "domain_id": "AM",
+    "name": "Asset Management",
+    "description": "Manage assets throughout their lifecycle to maintain their cybersecurity risk posture."
+  },
+  {
+    "domain_id": "AU",
+    "name": "Audit and Accountability",
+    "description": "Audit activities to provide accountability and monitor compliance."
+  },
+  {
+    "domain_id": "CM",
+    "name": "Configuration Management",
+    "description": "Establish and maintain baseline configurations and inventories of organizational systems."
+  },
+  {
+    "domain_id": "IA",
+    "name": "Identification and Authentication",
+    "description": "Verify the identities of users, processes, or devices prior to allowing access."
+  },
+  {
+    "domain_id": "IR",
+    "name": "Incident Response",
+    "description": "Establish operational capabilities for incident response."
+  },
+  {
+    "domain_id": "MA",
+    "name": "Maintenance",
+    "description": "Perform maintenance on organizational systems."
+  },
+  {
+    "domain_id": "MP",
+    "name": "Media Protection",
+    "description": "Protect system media containing sensitive data."
+  },
+  {
+    "domain_id": "PS",
+    "name": "Personnel Security",
+    "description": "Ensure personnel security through screening, training, and addressing risk."
+  },
+  {
+    "domain_id": "PE",
+    "name": "Physical Protection",
+    "description": "Limit physical access to systems, equipment, and operating environments."
+  },
+  {
+    "domain_id": "RA",
+    "name": "Risk Assessment",
+    "description": "Assess risk to organizational operations and assets."
+  },
+  {
+    "domain_id": "CA",
+    "name": "Security Assessment",
+    "description": "Regularly assess and monitor security controls."
+  },
+  {
+    "domain_id": "SC",
+    "name": "System and Communications Protection",
+    "description": "Protect information during transmission and monitor communications."
+  },
+  {
+    "domain_id": "SI",
+    "name": "System and Information Integrity",
+    "description": "Ensure system and information integrity through monitoring and timely updates."
+  },
+  {
+    "domain_id": "RE",
+    "name": "Recovery",
+    "description": "Ensure recovery of systems and information."
+  },
+  {
+    "domain_id": "RM",
+    "name": "Risk Management",
+    "description": "Manage organizational risk due to operation of systems."
+  },
+  {
+    "domain_id": "SA",
+    "name": "Situational Awareness",
+    "description": "Implement threat monitoring to support risk management decisions."
+  }
+]
