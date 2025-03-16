@@ -6,6 +6,8 @@ A comprehensive Governance, Risk, and Compliance (GRC) application for CMMC 2.0 
 
 - Support for all three CMMC 2.0 levels (Foundational, Advanced, Expert)
 - Coverage of all 14 CMMC domains with appropriate controls
+- User management with role-based access control
+- Organization management with hierarchical user assignments
 - Asset inventory management
 - Access control management
 - Audit and accountability tracking
@@ -16,6 +18,16 @@ A comprehensive Governance, Risk, and Compliance (GRC) application for CMMC 2.0 
 - Policy management repository
 - Compliance checklist with progress tracking
 - Evidence collection and management
+
+## Organization Management
+
+The application includes a comprehensive organization management system that allows:
+
+- Creating, editing, and deleting organizations
+- Assigning users to organizations with specific roles (admin, manager, auditor, user)
+- Managing organization details (name, industry, size, CMMC target level)
+- Viewing organization-specific compliance data
+- Role-based access control for organization management functions
 
 ## Technology Stack
 
@@ -108,14 +120,19 @@ grc-app/
 ├── client/                 # Frontend Angular application
 │   ├── src/                # Application source code
 │   │   ├── app/            # Angular components, services, and modules
+│   │   │   ├── organizations/  # Organization management components
+│   │   │   ├── users/          # User management components
+│   │   │   ├── shared/         # Shared components and utilities
+│   │   │   ├── core/           # Core services and interceptors
 │   │   ├── environments/   # Environment configuration
 │   │   └── assets/         # Static assets
-├── controllers/            # API controllers
-├── middlewares/            # Express middlewares
-├── models/                 # Data models
-├── routes/                 # API routes
+├── app/                    # Backend application
+│   ├── controllers/        # API controllers
+│   ├── middlewares/        # Express middlewares
+│   ├── models/             # Data models
+│   ├── routes/             # API routes
+│   └── utils/              # Utility functions
 ├── scripts/                # Utility scripts for setup
-├── services/               # Business logic services
 ├── database/               # Database seeds and migrations
 ├── Dockerfile              # Main application Dockerfile
 ├── docker-compose.yml      # Docker Compose configuration
@@ -125,7 +142,7 @@ grc-app/
 
 ## Development
 
-For ongoing development, refer to the extensive documentation in the codebase. The application follows standard Angular and Node.js/Express practices.
+For ongoing development, refer to the extensive documentation in the codebase. The application follows standard Angular and Node.js/Express practices. See the `development-notes.md` file for detailed development guidelines.
 
 ## License
 

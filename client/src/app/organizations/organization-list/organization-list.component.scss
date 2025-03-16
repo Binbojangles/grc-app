@@ -1,0 +1,136 @@
+.organization-list-container {
+  padding: 20px;
+  
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    h1 {
+      margin: 0;
+    }
+  }
+  
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0;
+    
+    p {
+      margin-top: 16px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  .error-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    
+    .error-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background-color: #fff9f9;
+      border: 1px solid #ffcdd2;
+      border-radius: 8px;
+      
+      mat-icon {
+        font-size: 48px;
+        height: 48px;
+        width: 48px;
+        margin-bottom: 12px;
+      }
+      
+      p {
+        margin-bottom: 16px;
+        text-align: center;
+        color: #d32f2f;
+      }
+    }
+  }
+  
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0;
+    
+    mat-icon {
+      font-size: 64px;
+      height: 64px;
+      width: 64px;
+      margin-bottom: 16px;
+      color: rgba(0, 0, 0, 0.3);
+    }
+    
+    p {
+      margin-bottom: 20px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  .organization-table {
+    width: 100%;
+    
+    .mat-column-name {
+      width: 25%;
+    }
+    
+    .mat-column-industry, .mat-column-size {
+      width: 15%;
+    }
+    
+    .mat-column-contact {
+      width: 35%;
+      
+      .contact-icon {
+        vertical-align: middle;
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        margin-right: 4px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+    
+    .mat-column-actions {
+      width: 10%;
+      text-align: right;
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .organization-list-container {
+    .header-row {
+      flex-direction: column;
+      align-items: flex-start;
+      
+      h1 {
+        margin-bottom: 16px;
+      }
+    }
+    
+    .organization-table {
+      .mat-column-industry, .mat-column-size {
+        display: none;
+      }
+      
+      .mat-column-name {
+        width: 40%;
+      }
+      
+      .mat-column-contact {
+        width: 45%;
+      }
+      
+      .mat-column-actions {
+        width: 15%;
+      }
+    }
+  }
+} 

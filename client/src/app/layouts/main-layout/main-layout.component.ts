@@ -18,7 +18,8 @@ export class MainLayoutComponent implements OnInit {
     { label: 'Controls', icon: 'security', route: '/controls' },
     { label: 'Assets', icon: 'devices', route: '/assets' },
     { label: 'Policies', icon: 'policy', route: '/policies' },
-    { label: 'Assessments', icon: 'assessment', route: '/assessments' }
+    { label: 'Assessments', icon: 'assessment', route: '/assessments' },
+    { label: 'Users', icon: 'people', route: '/users', adminOnly: true }
   ];
 
   constructor(
@@ -32,6 +33,11 @@ export class MainLayoutComponent implements OnInit {
     if (currentUser) {
       this.userName = currentUser.name || currentUser.email || 'User';
       this.userRole = currentUser.role || 'User';
+      
+      // Filter nav items based on user role
+      if (currentUser.role !== 'admin') {
+        this.navItems = this.navItems.filter(item => !item.adminOnly);
+      }
     }
     
     // Subscribe to user changes

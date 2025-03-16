@@ -96,7 +96,8 @@ export class AuthService {
   }
   
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token');
+    return !!token;
   }
   
   getToken(): string | null {
@@ -105,5 +106,29 @@ export class AuthService {
   
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+  
+  isAdmin(): boolean {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) return false;
+    
+    try {
+      const user = JSON.parse(userJson);
+      return user && user.role === 'admin';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  getUserId(): number | null {
+    const userJson = localStorage.getItem('user');
+    if (!userJson) return null;
+    
+    try {
+      const user = JSON.parse(userJson);
+      return user && user.id ? user.id : null;
+    } catch (e) {
+      return null;
+    }
   }
 } 

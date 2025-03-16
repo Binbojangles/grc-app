@@ -31,6 +31,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 // Charts
 import { NgChartsModule } from 'ng2-charts';
@@ -51,6 +52,12 @@ import { PoliciesComponent } from './policies/policies.component';
 import { AssessmentsComponent } from './assessments/assessments.component';
 import { AssessmentDetailComponent } from './assessments/assessment-detail/assessment-detail.component';
 import { NotFoundComponent } from './shared/not-found/not-found.component';
+import { UserListComponent } from './users/user-list/user-list.component';
+import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.component';
+import { OrganizationListComponent } from './organizations/organization-list/organization-list.component';
+import { OrganizationDetailComponent } from './organizations/organization-detail/organization-detail.component';
+import { OrganizationEditDialogComponent } from './organizations/organization-edit-dialog/organization-edit-dialog.component';
+import { UserAddDialogComponent } from './organizations/user-add-dialog/user-add-dialog.component';
 
 // Services
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
@@ -68,7 +75,13 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     PoliciesComponent,
     AssessmentsComponent,
     AssessmentDetailComponent,
-    NotFoundComponent
+    NotFoundComponent,
+    UserListComponent,
+    ConfirmDialogComponent,
+    OrganizationListComponent,
+    OrganizationDetailComponent,
+    OrganizationEditDialogComponent,
+    UserAddDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -104,6 +117,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     MatChipsModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatAutocompleteModule,
     // Charts
     NgChartsModule
   ],

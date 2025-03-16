@@ -150,5 +150,34 @@
         </mat-card-content>
       </mat-card>
     </div>
+
+    <div class="dashboard-section">
+      <h2>Management</h2>
+      <div class="card-container">
+        <mat-card class="dashboard-card">
+          <mat-card-header>
+            <mat-card-title>Organizations</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Manage organizational structure and user assignments</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button color="primary" routerLink="/organizations">View Organizations</button>
+          </mat-card-actions>
+        </mat-card>
+        
+        <mat-card class="dashboard-card">
+          <mat-card-header>
+            <mat-card-title>Users</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Manage system users, roles, and permissions</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button color="primary" routerLink="/users">View Users</button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
   </div>
 </div> 

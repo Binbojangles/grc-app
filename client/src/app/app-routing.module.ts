@@ -13,6 +13,9 @@ import { PoliciesComponent } from './policies/policies.component';
 import { AssessmentsComponent } from './assessments/assessments.component';
 import { AssessmentDetailComponent } from './assessments/assessment-detail/assessment-detail.component';
 import { NotFoundComponent } from './shared/not-found/not-found.component';
+import { UserListComponent } from './users/user-list/user-list.component';
+import { OrganizationListComponent } from './organizations/organization-list/organization-list.component';
+import { OrganizationDetailComponent } from './organizations/organization-detail/organization-detail.component';
 
 // Guards
 import { AuthGuard } from './core/guards/auth.guard';
@@ -32,6 +35,9 @@ const routes: Routes = [
       { path: 'policies', component: PoliciesComponent },
       { path: 'assessments', component: AssessmentsComponent },
       { path: 'assessments/:id', component: AssessmentDetailComponent },
+      { path: 'users', component: UserListComponent },
+      { path: 'organizations', component: OrganizationListComponent },
+      { path: 'organizations/:id', component: OrganizationDetailComponent },
     ]
   },
   { path: '404', component: NotFoundComponent },

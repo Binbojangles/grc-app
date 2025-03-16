@@ -1,0 +1,38 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.loading-option {
+  display: flex;
+  align-items: center;
+  
+  mat-spinner {
+    margin-right: 10px;
+  }
+}
+
+.error-container {
+  padding: 8px;
+  background-color: #fff8f8;
+  border-radius: 4px;
+  margin-top: 8px;
+  
+  .error-message {
+    color: #f44336;
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+mat-dialog-content {
+  min-width: 400px;
+  max-width: 600px;
+  padding-top: 10px;
+}
+
+@media (max-width: 599px) {
+  mat-dialog-content {
+    min-width: 250px;
+  }
+} 

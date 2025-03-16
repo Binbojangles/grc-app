@@ -1,0 +1,48 @@
+<h2 mat-dialog-title>Add User to Organization</h2>
+
+<div mat-dialog-content>
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Search User</mat-label>
+      <input type="text" matInput formControlName="userId" [matAutocomplete]="auto" placeholder="Start typing to search (min 3 characters)">
+      <mat-hint *ngIf="searchQuery && searchQuery.length < 3">Please enter at least 3 characters</mat-hint>
+      <mat-error *ngIf="userForm.get('userId')?.hasError('required')">
+        User is required
+      </mat-error>
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayUser">
+        <mat-option *ngIf="isLoading" class="loading-option">
+          <mat-spinner diameter="20"></mat-spinner> Searching...
+        </mat-option>
+        <mat-option *ngIf="!isLoading && users.length === 0 && searchQuery.length >= 3" disabled>
+          No users found
+        </mat-option>
+        <mat-option *ngFor="let user of users" [value]="user">
+          {{ user.email }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role">
+        <mat-option *ngFor="let role of roles" [value]="role">
+          {{ role | titlecase }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="userForm.get('role')?.hasError('required')">
+        Role is required
+      </mat-error>
+    </mat-form-field>
+  </form>
+
+  <div *ngIf="error" class="error-container">
+    <p class="error-message">{{ error }}</p>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" [disabled]="userForm.invalid || isLoading" (click)="onSubmit()">
+    Add User
+  </button>
+</div> 

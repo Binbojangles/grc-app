@@ -1,50 +1,37 @@
 const bcrypt = require('bcryptjs');
-const { query } = require('../utils/db');
-const winston = require('winston');
-
-// Create a logger instance
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/users.log' })
-  ]
-});
+const { pool } = require('../utils/db');
 
 /**
  * Get all users (admin only)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
  */
-exports.getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
-    const result = await query(
-      'SELECT id, email, name, role, organization_id, is_active, created_at, updated_at FROM users',
-      []
+    const result = await pool.query(
+      'SELECT id, name, email, role, organization_id, is_active, created_at, updated_at FROM users ORDER BY name'
     );
     
     res.json(result.rows);
   } catch (error) {
-    logger.error('Error fetching all users:', error);
-    res.status(500).json({ message: 'Server error while fetching users' });
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Failed to fetch users' });
   }
 };
 
 /**
  * Get user by ID
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * Users can view their own profile, admins can view any profile
  */
-exports.getUserById = async (req, res) => {
-  const userId = req.params.id;
+const getUserById = async (req, res) => {
+  const userId = parseInt(req.params.id);
+  
+  // Check if user is requesting their own profile or is an admin
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized to view this profile' });
+  }
   
   try {
-    const result = await query(
-      'SELECT id, email, name, role, organization_id, is_active, created_at, updated_at FROM users WHERE id = $1',
+    const result = await pool.query(
+      'SELECT id, name, email, role, organization_id, is_active, created_at, updated_at FROM users WHERE id = $1',
       [userId]
     );
     
@@ -52,219 +39,248 @@ exports.getUserById = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Only allow users to view their own profile unless they're an admin
-    if (req.user.role !== 'admin' && req.user.id !== parseInt(userId)) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-    
     res.json(result.rows[0]);
   } catch (error) {
-    logger.error(`Error fetching user ${userId}:`, error);
-    res.status(500).json({ message: 'Server error while fetching user' });
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Failed to fetch user' });
   }
 };
 
 /**
  * Create a new user (admin only)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
  */
-exports.createUser = async (req, res) => {
-  const { email, password, name, role, organization_id } = req.body;
+const createUser = async (req, res) => {
+  const { name, email, password, role, organization_id, is_active } = req.body;
   
   // Validate required fields
-  if (!email || !password || !name) {
-    return res.status(400).json({ message: 'Email, password, and name are required' });
-  }
-  
-  // Validate roles
-  const validRoles = ['admin', 'user', 'auditor', 'manager'];
-  if (role && !validRoles.includes(role)) {
-    return res.status(400).json({ message: 'Invalid role' });
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Name, email, and password are required' });
   }
   
   try {
-    // Check if user already exists
-    const existingUser = await query('SELECT * FROM users WHERE email = $1', [email]);
+    // Check if email already exists
+    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existingUser.rows.length > 0) {
-      return res.status(409).json({ message: 'User with this email already exists' });
+      return res.status(400).json({ message: 'Email already in use' });
     }
     
     // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create user
-    const result = await query(
-      'INSERT INTO users (email, password, name, role, organization_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, role, organization_id, is_active, created_at, updated_at',
-      [email, hashedPassword, name, role || 'user', organization_id || null]
+    // Insert new user
+    const result = await pool.query(
+      `INSERT INTO users (name, email, password, role, organization_id, is_active) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING id, name, email, role, organization_id, is_active, created_at, updated_at`,
+      [name, email, hashedPassword, role || 'user', organization_id || null, is_active !== undefined ? is_active : true]
     );
     
-    const newUser = result.rows[0];
-    
-    logger.info(`User created: ${newUser.id} - ${newUser.email}`);
-    res.status(201).json(newUser);
+    res.status(201).json(result.rows[0]);
   } catch (error) {
-    logger.error('Error creating user:', error);
-    res.status(500).json({ message: 'Server error while creating user' });
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Failed to create user' });
   }
 };
 
 /**
- * Update user by ID
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * Update user
+ * Users can update their own profile, admins can update any profile
  */
-exports.updateUser = async (req, res) => {
-  const userId = req.params.id;
-  const { email, name, role, organization_id, is_active } = req.body;
+const updateUser = async (req, res) => {
+  const userId = parseInt(req.params.id);
+  const { name, email, role, organization_id, is_active } = req.body;
   
-  // Only allow users to update their own profile unless they're an admin
-  if (req.user.role !== 'admin' && req.user.id !== parseInt(userId)) {
-    return res.status(403).json({ message: 'Access denied' });
+  // Check if user is updating their own profile or is an admin
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized to update this profile' });
+  }
+  
+  // Regular users cannot change their role or active status
+  if (req.user.id === userId && req.user.role !== 'admin') {
+    if (role && role !== req.user.role) {
+      return res.status(403).json({ message: 'Regular users cannot change their role' });
+    }
+    if (is_active !== undefined && is_active !== req.user.is_active) {
+      return res.status(403).json({ message: 'Regular users cannot change their active status' });
+    }
   }
   
   try {
-    // Check if user exists
-    const existingUser = await query('SELECT * FROM users WHERE id = $1', [userId]);
-    if (existingUser.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
+    // Check if email already exists (if changing email)
+    if (email) {
+      const existingUser = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [email, userId]);
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
     }
     
-    const user = existingUser.rows[0];
-    
-    // Prepare update fields
-    const updates = {};
-    
-    if (email) updates.email = email;
-    if (name) updates.name = name;
-    
-    // Role and organization changes are admin-only
-    if (req.user.role === 'admin') {
-      if (role) updates.role = role;
-      if (organization_id !== undefined) updates.organization_id = organization_id;
-      if (is_active !== undefined) updates.is_active = is_active;
-    }
-    
-    // If no updates, return the current user
-    if (Object.keys(updates).length === 0) {
-      const result = await query(
-        'SELECT id, email, name, role, organization_id, is_active, created_at, updated_at FROM users WHERE id = $1',
-        [userId]
-      );
-      return res.json(result.rows[0]);
-    }
-    
-    // Build the query
-    let setClause = '';
+    // Build update query dynamically based on provided fields
+    const updates = [];
     const values = [];
-    let valueIndex = 1;
+    let paramIndex = 1;
     
-    Object.entries(updates).forEach(([key, value], index) => {
-      setClause += `${index > 0 ? ', ' : ''}${key} = $${valueIndex}`;
-      values.push(value);
-      valueIndex++;
-    });
+    if (name) {
+      updates.push(`name = $${paramIndex++}`);
+      values.push(name);
+    }
     
-    setClause += `, updated_at = CURRENT_TIMESTAMP`;
+    if (email) {
+      updates.push(`email = $${paramIndex++}`);
+      values.push(email);
+    }
+    
+    if (role && req.user.role === 'admin') {
+      updates.push(`role = $${paramIndex++}`);
+      values.push(role);
+    }
+    
+    if (organization_id !== undefined) {
+      updates.push(`organization_id = $${paramIndex++}`);
+      values.push(organization_id === null ? null : organization_id);
+    }
+    
+    if (is_active !== undefined && req.user.role === 'admin') {
+      updates.push(`is_active = $${paramIndex++}`);
+      values.push(is_active);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+    
+    // Add userId to values array
     values.push(userId);
     
-    // Update user
-    const result = await query(
-      `UPDATE users SET ${setClause} WHERE id = $${valueIndex} RETURNING id, email, name, role, organization_id, is_active, created_at, updated_at`,
+    // Execute update query
+    const result = await pool.query(
+      `UPDATE users SET ${updates.join(', ')}, updated_at = NOW() 
+       WHERE id = $${paramIndex} 
+       RETURNING id, name, email, role, organization_id, is_active, created_at, updated_at`,
       values
     );
     
-    logger.info(`User updated: ${userId}`);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
     res.json(result.rows[0]);
   } catch (error) {
-    logger.error(`Error updating user ${userId}:`, error);
-    res.status(500).json({ message: 'Server error while updating user' });
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Failed to update user' });
   }
 };
 
 /**
- * Change user password
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * Change password
+ * Users can change their own password, admins can change any password
  */
-exports.changePassword = async (req, res) => {
-  const userId = req.params.id;
+const changePassword = async (req, res) => {
+  const userId = parseInt(req.params.id);
   const { currentPassword, newPassword } = req.body;
   
-  // Validate required fields
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ message: 'Current password and new password are required' });
+  // Check if user is changing their own password or is an admin
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized to change this password' });
   }
   
-  // Only allow users to change their own password unless they're an admin
-  if (req.user.role !== 'admin' && req.user.id !== parseInt(userId)) {
-    return res.status(403).json({ message: 'Access denied' });
+  // Validate new password
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({ message: 'New password must be at least 8 characters long' });
   }
   
   try {
-    // Get the user with password
-    const userResult = await query('SELECT * FROM users WHERE id = $1', [userId]);
+    // Get current user data
+    const userResult = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
     
     if (userResult.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    const user = userResult.rows[0];
-    
-    // For non-admin users, verify current password
-    if (req.user.role !== 'admin') {
-      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    // If user is changing their own password, verify current password
+    if (req.user.id === userId) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: 'Current password is required' });
+      }
+      
+      const isPasswordValid = await bcrypt.compare(currentPassword, userResult.rows[0].password);
       if (!isPasswordValid) {
         return res.status(401).json({ message: 'Current password is incorrect' });
       }
     }
     
-    // Password validation
-    if (newPassword.length < 8) {
-      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
-    }
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    
-    // Update the password
-    await query(
-      'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+    // Update password
+    await pool.query(
+      'UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2',
       [hashedPassword, userId]
     );
     
-    logger.info(`Password changed for user: ${userId}`);
-    res.json({ message: 'Password changed successfully' });
+    res.json({ message: 'Password updated successfully' });
   } catch (error) {
-    logger.error(`Error changing password for user ${userId}:`, error);
-    res.status(500).json({ message: 'Server error while changing password' });
+    console.error('Error changing password:', error);
+    res.status(500).json({ message: 'Failed to change password' });
   }
 };
 
 /**
- * Delete user by ID (admin only)
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * Delete user (admin only)
  */
-exports.deleteUser = async (req, res) => {
-  const userId = req.params.id;
+const deleteUser = async (req, res) => {
+  const userId = parseInt(req.params.id);
+  
+  // Prevent deleting own account
+  if (req.user.id === userId) {
+    return res.status(400).json({ message: 'Cannot delete your own account' });
+  }
   
   try {
-    // Check if user exists
-    const existingUser = await query('SELECT * FROM users WHERE id = $1', [userId]);
-    if (existingUser.rows.length === 0) {
+    const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id', [userId]);
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Delete user
-    await query('DELETE FROM users WHERE id = $1', [userId]);
-    
-    logger.info(`User deleted: ${userId}`);
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
-    logger.error(`Error deleting user ${userId}:`, error);
-    res.status(500).json({ message: 'Server error while deleting user' });
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Failed to delete user' });
   }
+};
+
+/**
+ * Search users by name or email
+ */
+const searchUsers = async (req, res) => {
+  const { query } = req.query;
+  
+  if (!query) {
+    return res.status(400).json({ message: 'Search query is required' });
+  }
+  
+  try {
+    // Search for users by name or email, excluding the current user
+    const result = await pool.query(
+      `SELECT id, name, email, role, is_active, organization_id FROM users 
+       WHERE (name ILIKE $1 OR email ILIKE $1) AND id != $2 
+       ORDER BY name LIMIT 10`,
+      [`%${query}%`, req.user.id]
+    );
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ message: 'Failed to search users' });
+  }
+};
+
+module.exports = {
+  getAllUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  changePassword,
+  deleteUser,
+  searchUsers
 }; 

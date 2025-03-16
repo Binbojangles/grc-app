@@ -28,6 +28,18 @@
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.label }}</span>
         </a>
+        <a mat-list-item routerLink="/assessments" routerLinkActive="active">
+          <mat-icon>assessment</mat-icon>
+          <span>Assessments</span>
+        </a>
+        <a mat-list-item routerLink="/users" routerLinkActive="active">
+          <mat-icon>people</mat-icon>
+          <span>Users</span>
+        </a>
+        <a mat-list-item routerLink="/organizations" routerLinkActive="active">
+          <mat-icon>business</mat-icon>
+          <span>Organizations</span>
+        </a>
       </mat-nav-list>
     </mat-sidenav>
 

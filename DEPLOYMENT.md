@@ -2,6 +2,17 @@
 
 This document outlines the steps required to deploy the GRC CMMC application in a production environment.
 
+## Features Overview
+
+The GRC CMMC application includes the following key features:
+
+- **CMMC Compliance Management**: Support for all CMMC 2.0 domains and levels.
+- **User Management**: Role-based access control with different permission levels.
+- **Organization Management**: Create and manage organizations, assign users to organizations with specific roles.
+- **Assessment Management**: Create, conduct, and track compliance assessments.
+- **Risk Management**: Identify, track, and mitigate compliance risks.
+- **Documentation Repository**: Store and manage compliance-related documentation.
+
 ## Prerequisites
 
 - Docker and Docker Compose installed on the target server
@@ -57,12 +68,23 @@ This will:
   - Email: admin@example.com
   - Password: Password123!
 
-### 5. Change Default Credentials
+### 5. Initial Configuration
 
-After deployment, you should immediately change the default admin password:
-1. Log in with the default credentials
-2. Navigate to the user profile
-3. Change the password to a strong, unique password
+After deployment, perform these initial configuration steps:
+
+1. Change the default admin password
+   - Log in with the default credentials
+   - Navigate to the user profile
+   - Change the password to a strong, unique password
+
+2. Create your organization structure
+   - Navigate to the Organizations section
+   - Create the necessary organizations
+   - Assign users to organizations with appropriate roles
+
+3. Import or create compliance frameworks
+   - Navigate to the Compliance Frameworks section 
+   - Import or define your compliance requirements
 
 ### 6. Production Hardening
 
@@ -169,6 +191,50 @@ Verify the database is running:
 ```bash
 docker compose exec postgres psql -U postgres -c "SELECT 1;"
 ```
+
+### Organization Display Issues or "Failed to fetch organizations" Error
+
+If the organizations page displays an error or fails to load:
+
+1. The most common cause is a mismatch between the database schema and the application code. Check the database schema:
+   ```bash
+   docker compose exec postgres psql -U postgres -d grc_db -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'organizations';"
+   ```
+
+2. Verify that the `cmmc_target_level` column exists (required) and that there are no obsolete columns (address, contact_email, contact_phone).
+
+3. If there's a schema mismatch, you can either:
+   - Update the application code to match your database schema
+   - Manually alter the database schema to match the application code
+   - Reset the application and database with `docker compose down -v` and then `docker compose up --build -d`
+
+### Organization Management Issues
+
+If users are unable to access organization features:
+
+1. Verify the user has the correct role
+   ```bash
+   docker compose exec postgres psql -U postgres -d grc_db -c "SELECT name, email, role FROM users WHERE email = 'user@example.com';"
+   ```
+
+2. Check organization assignments
+   ```bash
+   docker compose exec postgres psql -U postgres -d grc_db -c "SELECT u.name, u.email, o.name FROM users u JOIN organizations o ON u.organization_id = o.id;"
+   ```
+
+3. Verify organization schema matches the application code
+   ```bash
+   docker compose exec postgres psql -U postgres -d grc_db -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'organizations';"
+   ```
+   
+   The organizations table should have these columns:
+   - id
+   - name
+   - industry
+   - size
+   - cmmc_target_level
+   - created_at
+   - updated_at
 
 ### Reset the Application
 

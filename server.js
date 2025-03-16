@@ -43,6 +43,8 @@ pool.query('SELECT NOW()', (err, res) => {
 app.use('/api/auth', require('./app/routes/authRoutes'));
 app.use('/api/domains', require('./app/routes/domainRoutes'));
 app.use('/api/controls', require('./app/routes/controlRoutes'));
+app.use('/api/users', require('./app/routes/userRoutes'));
+app.use('/api/organizations', require('./app/routes/organizationRoutes'));
 // app.use('/api/assets', require('./app/routes/assets'));
 // app.use('/api/policies', require('./app/routes/policies'));
 
