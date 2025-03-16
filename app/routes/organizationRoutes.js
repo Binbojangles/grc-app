@@ -6,8 +6,14 @@ const { authenticateToken, requireAdmin } = require('../middleware/auth');
 // GET /api/organizations - Get all organizations
 router.get('/', authenticateToken, organizationController.getAllOrganizations);
 
+// GET /api/organizations/hierarchy - Get organization hierarchy
+router.get('/hierarchy', authenticateToken, organizationController.getOrganizationHierarchy);
+
 // GET /api/organizations/:id - Get organization by ID
 router.get('/:id', authenticateToken, organizationController.getOrganizationById);
+
+// GET /api/organizations/:id/children - Get child organizations
+router.get('/:id/children', authenticateToken, organizationController.getChildOrganizations);
 
 // POST /api/organizations - Create a new organization (admin only)
 router.post('/', authenticateToken, requireAdmin, organizationController.createOrganization);

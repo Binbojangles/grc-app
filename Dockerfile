@@ -1,5 +1,8 @@
 FROM node:18-slim
 
+# Install PostgreSQL client for health checks
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -23,12 +26,17 @@ COPY . .
 # Copy .env.example to .env if .env doesn't exist
 RUN if [ ! -f .env ]; then cp .env.example .env || echo "No .env.example file found"; fi
 
-# Setup the database
+# Setup the database directory
 RUN mkdir -p database/seeds
-RUN npm run setup:db || echo "Database setup will be performed at runtime"
+
+# Make the entrypoint script executable
+RUN chmod +x docker-entrypoint.sh
 
 # Expose port
 EXPOSE 5000
 
+# Set entrypoint
+ENTRYPOINT ["/usr/src/app/docker-entrypoint.sh"]
+
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

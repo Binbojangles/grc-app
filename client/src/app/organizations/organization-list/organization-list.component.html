@@ -1,94 +1,136 @@
-<div class="organization-list-container">
-  <div class="header-row">
-    <h1>Organizations</h1>
-    <button *ngIf="isAdmin" mat-raised-button color="primary" (click)="createOrganization()">
-      <mat-icon>add</mat-icon> Add Organization
-    </button>
-  </div>
+<div class="container">
+  <h1>Organizations</h1>
+  
+  <mat-card>
+    <mat-card-content>
+      <div class="header-actions">
+        <div>
+          <mat-button-toggle-group [(ngModel)]="viewMode" aria-label="View Mode">
+            <mat-button-toggle value="list">List View</mat-button-toggle>
+            <mat-button-toggle value="hierarchy">Hierarchy View</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+        <div>
+          <button mat-raised-button color="primary" (click)="createOrganization()" *ngIf="isAdmin">
+            <mat-icon>add</mat-icon> Create Organization
+          </button>
+        </div>
+      </div>
 
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p>Loading organizations...</p>
-  </div>
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+      </div>
 
-  <div *ngIf="error && !isLoading" class="error-container">
-    <div class="error-card">
-      <mat-icon color="warn">error_outline</mat-icon>
-      <p>{{ error }}</p>
-      <button mat-raised-button color="primary" (click)="loadOrganizations()">Retry</button>
-    </div>
-  </div>
+      <div *ngIf="error" class="error-container">
+        <p class="error-message">{{ error }}</p>
+      </div>
 
-  <div *ngIf="!isLoading && !error">
-    <div *ngIf="organizations.length === 0" class="empty-state">
-      <mat-icon>business</mat-icon>
-      <p>No organizations found.</p>
-      <button *ngIf="isAdmin" mat-raised-button color="primary" (click)="createOrganization()">Add Organization</button>
-    </div>
+      <!-- List View -->
+      <div *ngIf="!isLoading && viewMode === 'list'">
+        <table mat-table [dataSource]="organizations" class="full-width">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let org">
+              {{ org.name }}
+            </td>
+          </ng-container>
 
-    <mat-card *ngIf="organizations.length > 0">
-      <table mat-table [dataSource]="organizations" class="organization-table">
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Name</th>
-          <td mat-cell *matCellDef="let org">{{ org.name }}</td>
-        </ng-container>
+          <ng-container matColumnDef="industry">
+            <th mat-header-cell *matHeaderCellDef>Industry</th>
+            <td mat-cell *matCellDef="let org">{{ org.industry || 'N/A' }}</td>
+          </ng-container>
 
-        <!-- Industry Column -->
-        <ng-container matColumnDef="industry">
-          <th mat-header-cell *matHeaderCellDef>Industry</th>
-          <td mat-cell *matCellDef="let org">{{ org.industry || 'N/A' }}</td>
-        </ng-container>
+          <ng-container matColumnDef="size">
+            <th mat-header-cell *matHeaderCellDef>Size</th>
+            <td mat-cell *matCellDef="let org">{{ org.size || 'N/A' }}</td>
+          </ng-container>
 
-        <!-- Size Column -->
-        <ng-container matColumnDef="size">
-          <th mat-header-cell *matHeaderCellDef>Size</th>
-          <td mat-cell *matCellDef="let org">{{ org.size || 'N/A' }}</td>
-        </ng-container>
+          <ng-container matColumnDef="cmmc_level">
+            <th mat-header-cell *matHeaderCellDef>CMMC Target Level</th>
+            <td mat-cell *matCellDef="let org">{{ org.cmmc_target_level }}</td>
+          </ng-container>
 
-        <!-- Contact Column -->
-        <ng-container matColumnDef="contact">
-          <th mat-header-cell *matHeaderCellDef>Contact</th>
-          <td mat-cell *matCellDef="let org">
-            <div *ngIf="org.contact_email">
-              <mat-icon class="contact-icon">email</mat-icon> {{ org.contact_email }}
-            </div>
-            <div *ngIf="org.contact_phone">
-              <mat-icon class="contact-icon">phone</mat-icon> {{ org.contact_phone }}
-            </div>
-            <div *ngIf="!org.contact_email && !org.contact_phone">
-              N/A
-            </div>
-          </td>
-        </ng-container>
+          <ng-container matColumnDef="parent">
+            <th mat-header-cell *matHeaderCellDef>Parent Organization</th>
+            <td mat-cell *matCellDef="let org">
+              <span *ngIf="getParentName(org.parent_organization_id); else noParent">
+                {{ getParentName(org.parent_organization_id) }}
+              </span>
+              <ng-template #noParent>None</ng-template>
+            </td>
+          </ng-container>
 
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let org">
-            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Organization actions">
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu">
-              <button mat-menu-item (click)="viewOrganization(org.id)">
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let org">
+              <button mat-icon-button (click)="viewOrganization(org.id)" matTooltip="View Details">
                 <mat-icon>visibility</mat-icon>
-                <span>View Details</span>
               </button>
-              <button mat-menu-item *ngIf="isAdmin" (click)="editOrganization(org)">
+              <button mat-icon-button (click)="editOrganization(org)" *ngIf="isAdmin" matTooltip="Edit">
                 <mat-icon>edit</mat-icon>
-                <span>Edit</span>
               </button>
-              <button mat-menu-item *ngIf="isAdmin" (click)="deleteOrganization(org)">
-                <mat-icon color="warn">delete</mat-icon>
-                <span>Delete</span>
+              <button mat-icon-button (click)="deleteOrganization(org)" *ngIf="isAdmin" matTooltip="Delete">
+                <mat-icon>delete</mat-icon>
               </button>
-            </mat-menu>
-          </td>
-        </ng-container>
+            </td>
+          </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </mat-card>
-  </div>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div *ngIf="organizations.length === 0" class="no-data">
+          <p>No organizations found</p>
+        </div>
+      </div>
+
+      <!-- Hierarchy View -->
+      <div *ngIf="!isLoading && viewMode === 'hierarchy'">
+        <div *ngIf="hierarchyData.length === 0" class="no-data">
+          <p>No organizations found</p>
+        </div>
+
+        <mat-tree [dataSource]="hierarchyDataSource" [treeControl]="treeControl" class="org-tree">
+          <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+            <div class="tree-node-content">
+              <span>{{ node.name }}</span>
+              <div class="tree-node-actions">
+                <button mat-icon-button (click)="viewOrganization(node.id)" matTooltip="View Details">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button mat-icon-button (click)="editOrganization(node)" *ngIf="isAdmin" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="deleteOrganization(node)" *ngIf="isAdmin" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-tree-node>
+
+          <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+            <div class="tree-node-content">
+              <button mat-icon-button matTreeNodeToggle>
+                <mat-icon>
+                  {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+                </mat-icon>
+              </button>
+              <span>{{ node.name }}</span>
+              <div class="tree-node-actions">
+                <button mat-icon-button (click)="viewOrganization(node.id)" matTooltip="View Details">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button mat-icon-button (click)="editOrganization(node)" *ngIf="isAdmin" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="deleteOrganization(node)" *ngIf="isAdmin" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-tree-node>
+        </mat-tree>
+      </div>
+    </mat-card-content>
+  </mat-card>
 </div> 

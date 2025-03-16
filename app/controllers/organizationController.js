@@ -6,7 +6,7 @@ const { pool } = require('../utils/db');
 const getAllOrganizations = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, industry, size, cmmc_target_level, created_at, updated_at FROM organizations ORDER BY name'
+      'SELECT id, name, industry, size, cmmc_target_level, parent_organization_id, created_at, updated_at FROM organizations ORDER BY name'
     );
     
     res.json(result.rows);
@@ -24,7 +24,7 @@ const getOrganizationById = async (req, res) => {
   
   try {
     const result = await pool.query(
-      'SELECT id, name, industry, size, cmmc_target_level, created_at, updated_at FROM organizations WHERE id = $1',
+      'SELECT id, name, industry, size, cmmc_target_level, parent_organization_id, created_at, updated_at FROM organizations WHERE id = $1',
       [orgId]
     );
     
@@ -43,7 +43,7 @@ const getOrganizationById = async (req, res) => {
  * Create a new organization (admin only)
  */
 const createOrganization = async (req, res) => {
-  const { name, industry, size, cmmc_target_level } = req.body;
+  const { name, industry, size, cmmc_target_level, parent_organization_id } = req.body;
   
   // Validate required fields
   if (!name) {
@@ -55,12 +55,20 @@ const createOrganization = async (req, res) => {
   }
   
   try {
+    // Validate parent organization if provided
+    if (parent_organization_id) {
+      const parentCheck = await pool.query('SELECT id FROM organizations WHERE id = $1', [parent_organization_id]);
+      if (parentCheck.rows.length === 0) {
+        return res.status(400).json({ message: 'Parent organization not found' });
+      }
+    }
+    
     // Insert new organization
     const result = await pool.query(
-      `INSERT INTO organizations (name, industry, size, cmmc_target_level) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING id, name, industry, size, cmmc_target_level, created_at, updated_at`,
-      [name, industry || null, size || null, cmmc_target_level]
+      `INSERT INTO organizations (name, industry, size, cmmc_target_level, parent_organization_id) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING id, name, industry, size, cmmc_target_level, parent_organization_id, created_at, updated_at`,
+      [name, industry || null, size || null, cmmc_target_level, parent_organization_id || null]
     );
     
     res.status(201).json(result.rows[0]);
@@ -75,9 +83,36 @@ const createOrganization = async (req, res) => {
  */
 const updateOrganization = async (req, res) => {
   const orgId = parseInt(req.params.id);
-  const { name, industry, size, cmmc_target_level } = req.body;
+  const { name, industry, size, cmmc_target_level, parent_organization_id } = req.body;
   
   try {
+    // Prevent circular references in hierarchy
+    if (parent_organization_id) {
+      if (parent_organization_id === orgId) {
+        return res.status(400).json({ message: 'Organization cannot be its own parent' });
+      }
+      
+      // Check if parent exists
+      const parentCheck = await pool.query('SELECT id FROM organizations WHERE id = $1', [parent_organization_id]);
+      if (parentCheck.rows.length === 0) {
+        return res.status(400).json({ message: 'Parent organization not found' });
+      }
+      
+      // Check for circular reference in the hierarchy
+      let currentParentId = parent_organization_id;
+      while (currentParentId) {
+        if (currentParentId === orgId) {
+          return res.status(400).json({ message: 'Circular reference detected in organization hierarchy' });
+        }
+        
+        const parentResult = await pool.query('SELECT parent_organization_id FROM organizations WHERE id = $1', [currentParentId]);
+        if (parentResult.rows.length === 0 || !parentResult.rows[0].parent_organization_id) {
+          break;
+        }
+        currentParentId = parentResult.rows[0].parent_organization_id;
+      }
+    }
+
     // Build update query dynamically based on provided fields
     const updates = [];
     const values = [];
@@ -103,6 +138,11 @@ const updateOrganization = async (req, res) => {
       values.push(cmmc_target_level);
     }
     
+    if (parent_organization_id !== undefined) {
+      updates.push(`parent_organization_id = $${paramIndex++}`);
+      values.push(parent_organization_id === null ? null : parent_organization_id);
+    }
+    
     if (updates.length === 0) {
       return res.status(400).json({ message: 'No valid fields to update' });
     }
@@ -114,7 +154,7 @@ const updateOrganization = async (req, res) => {
     const result = await pool.query(
       `UPDATE organizations SET ${updates.join(', ')}, updated_at = NOW() 
        WHERE id = $${paramIndex} 
-       RETURNING id, name, industry, size, cmmc_target_level, created_at, updated_at`,
+       RETURNING id, name, industry, size, cmmc_target_level, parent_organization_id, created_at, updated_at`,
       values
     );
     
@@ -141,6 +181,14 @@ const deleteOrganization = async (req, res) => {
     if (parseInt(userCheck.rows[0].count) > 0) {
       return res.status(400).json({ 
         message: 'Cannot delete organization with associated users. Reassign or delete users first.' 
+      });
+    }
+    
+    // Check if organization has child organizations
+    const childCheck = await pool.query('SELECT COUNT(*) FROM organizations WHERE parent_organization_id = $1', [orgId]);
+    if (parseInt(childCheck.rows[0].count) > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete organization with child organizations. Update or delete child organizations first.' 
       });
     }
     
@@ -309,6 +357,70 @@ const removeUserFromOrganization = async (req, res) => {
   }
 };
 
+/**
+ * Get child organizations of a parent organization
+ */
+const getChildOrganizations = async (req, res) => {
+  const parentOrgId = parseInt(req.params.id);
+  
+  try {
+    // Check if parent organization exists
+    const orgCheck = await pool.query('SELECT id FROM organizations WHERE id = $1', [parentOrgId]);
+    if (orgCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Parent organization not found' });
+    }
+    
+    const result = await pool.query(
+      'SELECT id, name, industry, size, cmmc_target_level, parent_organization_id, created_at, updated_at FROM organizations WHERE parent_organization_id = $1 ORDER BY name',
+      [parentOrgId]
+    );
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching child organizations:', error);
+    res.status(500).json({ message: 'Failed to fetch child organizations' });
+  }
+};
+
+/**
+ * Get organization hierarchy
+ */
+const getOrganizationHierarchy = async (req, res) => {
+  try {
+    // Get all organizations
+    const result = await pool.query(
+      'SELECT id, name, industry, size, cmmc_target_level, parent_organization_id, created_at, updated_at FROM organizations ORDER BY name'
+    );
+    
+    // Build hierarchy
+    const organizations = result.rows;
+    const orgMap = {};
+    const rootOrgs = [];
+    
+    // First pass: create map of all organizations
+    organizations.forEach(org => {
+      org.children = [];
+      orgMap[org.id] = org;
+    });
+    
+    // Second pass: establish parent-child relationships
+    organizations.forEach(org => {
+      if (org.parent_organization_id) {
+        if (orgMap[org.parent_organization_id]) {
+          orgMap[org.parent_organization_id].children.push(org);
+        }
+      } else {
+        rootOrgs.push(org);
+      }
+    });
+    
+    res.json(rootOrgs);
+  } catch (error) {
+    console.error('Error fetching organization hierarchy:', error);
+    res.status(500).json({ message: 'Failed to fetch organization hierarchy' });
+  }
+};
+
 module.exports = {
   getAllOrganizations,
   getOrganizationById,
@@ -318,5 +430,7 @@ module.exports = {
   getOrganizationUsers,
   addUserToOrganization,
   updateUserRole,
-  removeUserFromOrganization
+  removeUserFromOrganization,
+  getChildOrganizations,
+  getOrganizationHierarchy
 }; 

@@ -1,0 +1,51 @@
+<h2 mat-dialog-title class="dialog-title">{{ isEdit ? 'Edit' : 'Add' }} Department</h2>
+
+<form [formGroup]="departmentForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content>
+    <div class="form-container">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" placeholder="Department Name" required>
+        <mat-icon matPrefix>group_work</mat-icon>
+        <mat-error *ngIf="departmentForm.get('name')?.hasError('required')">
+          Name is required
+        </mat-error>
+        <mat-error *ngIf="departmentForm.get('name')?.hasError('maxlength')">
+          Name cannot exceed 255 characters
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" placeholder="Department Description" rows="3"></textarea>
+        <mat-icon matPrefix>description</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Parent Department</mat-label>
+        <mat-select formControlName="parent_department_id">
+          <mat-option [value]="null">None</mat-option>
+          <mat-option *ngFor="let dept of parentDepartments" [value]="dept.id">
+            {{ dept.name }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>account_tree</mat-icon>
+        <mat-hint>Select a parent department to create a hierarchy</mat-hint>
+      </mat-form-field>
+
+      <input type="hidden" formControlName="organization_id">
+    </div>
+
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button type="button" (click)="onCancel()" [disabled]="isSubmitting">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="departmentForm.invalid || isSubmitting">
+      <mat-spinner *ngIf="isSubmitting" diameter="20" class="spinner-button"></mat-spinner>
+      <span *ngIf="!isSubmitting">{{ isEdit ? 'Update' : 'Create' }}</span>
+    </button>
+  </mat-dialog-actions>
+</form> 

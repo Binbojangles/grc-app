@@ -1,1 +1,9 @@
 <router-outlet></router-outlet>
+
+<!-- Footer with style update button for admin users only -->
+<div *ngIf="(authService.currentUser$ | async)?.role === 'admin'" class="admin-tools">
+  <button mat-mini-fab color="accent" (click)="updateStyles()" 
+          matTooltip="Update UI Styles" class="update-styles-btn">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>

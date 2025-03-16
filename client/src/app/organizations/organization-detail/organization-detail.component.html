@@ -1,154 +1,125 @@
-<div class="organization-detail-container">
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p>Loading organization details...</p>
-  </div>
-
-  <div *ngIf="error && !isLoading" class="error-container">
-    <div class="error-card">
-      <mat-icon color="warn">error_outline</mat-icon>
-      <p>{{ error }}</p>
-      <button mat-raised-button color="primary" (click)="loadOrganizationData()">Retry</button>
+<div class="container" *ngIf="organization">
+  <div class="header-bar">
+    <h1>{{ organization.name }}</h1>
+    <div class="actions">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to organizations">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <button mat-icon-button *ngIf="isAdmin" (click)="editOrganization()" matTooltip="Edit organization">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button *ngIf="isAdmin" (click)="deleteOrganization()" matTooltip="Delete organization">
+        <mat-icon>delete</mat-icon>
+      </button>
     </div>
   </div>
 
-  <div *ngIf="!isLoading && !error && organization">
-    <div class="header-row">
-      <div class="title-section">
-        <button mat-icon-button (click)="goBack()" aria-label="Go back">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h1>{{ organization.name }}</h1>
-      </div>
-      <div class="actions-section" *ngIf="isAdmin">
-        <button mat-raised-button color="primary" (click)="editOrganization()">
-          <mat-icon>edit</mat-icon> Edit
-        </button>
-        <button mat-raised-button color="warn" (click)="deleteOrganization()">
-          <mat-icon>delete</mat-icon> Delete
-        </button>
-      </div>
-    </div>
-
-    <div class="organization-info-section">
-      <mat-card>
-        <mat-card-content>
-          <h2>Organization Details</h2>
-          
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="label">Industry</div>
-              <div class="value">{{ organization.industry || 'Not specified' }}</div>
-            </div>
-            
-            <div class="info-item">
-              <div class="label">Size</div>
-              <div class="value">{{ organization.size || 'Not specified' }}</div>
-            </div>
-            
-            <div class="info-item">
-              <div class="label">CMMC Target Level</div>
-              <div class="value">{{ organization.cmmc_target_level }}</div>
-            </div>
-            
-            <div class="info-item">
-              <div class="label">Created</div>
-              <div class="value">{{ organization.created_at | date:'medium' }}</div>
-            </div>
-            
-            <div class="info-item">
-              <div class="label">Last Updated</div>
-              <div class="value">{{ organization.updated_at | date:'medium' }}</div>
-            </div>
+  <mat-card>
+    <mat-card-content>
+      <div class="org-details">
+        <div class="detail-row">
+          <div class="detail-label">Industry:</div>
+          <div>{{ organization.industry || 'Not specified' }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Size:</div>
+          <div>{{ organization.size || 'Not specified' }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">CMMC Target Level:</div>
+          <div>{{ organization.cmmc_target_level }}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Parent Organization:</div>
+          <div *ngIf="parentOrganization; else noParent">
+            <a [routerLink]="['/organizations', parentOrganization.id]">{{ parentOrganization.name }}</a>
           </div>
-        </mat-card-content>
-      </mat-card>
+          <ng-template #noParent>None (Root Organization)</ng-template>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="childOrganizations.length > 0" class="child-orgs-section">
+    <h2>Child Organizations</h2>
+    <mat-card>
+      <mat-list>
+        <mat-list-item *ngFor="let child of childOrganizations">
+          <mat-icon matListItemIcon>business</mat-icon>
+          <div matListItemTitle>
+            <a [routerLink]="['/organizations', child.id]">{{ child.name }}</a>
+          </div>
+          <div matListItemLine>{{ child.industry || 'No industry' }} | CMMC Level: {{ child.cmmc_target_level }}</div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+  </div>
+
+  <div class="users-section">
+    <div class="section-header">
+      <h2>Organization Users</h2>
+      <button mat-raised-button color="primary" *ngIf="isAdmin" (click)="addUser()">
+        <mat-icon>person_add</mat-icon> Add User
+      </button>
     </div>
 
-    <div class="organization-users-section">
-      <mat-card>
-        <mat-card-content>
-          <h2>Organization Users ({{ users.length }})</h2>
-          
-          <div *ngIf="users.length === 0" class="empty-users">
-            <mat-icon>people_outline</mat-icon>
-            <p>No users in this organization</p>
-            <button *ngIf="isAdmin" mat-raised-button color="primary" (click)="addUser()">
-              Add User
+    <mat-card *ngIf="users.length > 0">
+      <table mat-table [dataSource]="users" class="full-width">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let user">{{ user.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let user" [ngClass]="getRoleClass(user.role)">
+            {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let user" [ngClass]="getStatusClass(user.is_active)">
+            {{ user.is_active ? 'Active' : 'Inactive' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let user">
+            <button mat-icon-button (click)="viewUserProfile(user.id)" matTooltip="View profile">
+              <mat-icon>visibility</mat-icon>
             </button>
-          </div>
-          
-          <div *ngIf="users.length > 0" class="users-table-container">
-            <div class="users-header">
-              <h3>Organization Members</h3>
-              <button *ngIf="isAdmin" mat-raised-button color="primary" (click)="addUser()">
-                <mat-icon>person_add</mat-icon> Add User
-              </button>
-            </div>
-            
-            <table mat-table [dataSource]="users" class="users-table">
-              <!-- Name Column -->
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Name</th>
-                <td mat-cell *matCellDef="let user">{{ user.name }}</td>
-              </ng-container>
+            <button mat-icon-button *ngIf="isAdmin" (click)="updateUserRole(user.id, user.name, user.role)" matTooltip="Change role">
+              <mat-icon>manage_accounts</mat-icon>
+            </button>
+            <button mat-icon-button *ngIf="isAdmin" (click)="removeUser(user.id, user.name)" matTooltip="Remove from organization">
+              <mat-icon>person_remove</mat-icon>
+            </button>
+          </td>
+        </ng-container>
 
-              <!-- Email Column -->
-              <ng-container matColumnDef="email">
-                <th mat-header-cell *matHeaderCellDef>Email</th>
-                <td mat-cell *matCellDef="let user">{{ user.email }}</td>
-              </ng-container>
+        <tr mat-header-row *matHeaderRowDef="userDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: userDisplayedColumns;"></tr>
+      </table>
+    </mat-card>
 
-              <!-- Role Column -->
-              <ng-container matColumnDef="role">
-                <th mat-header-cell *matHeaderCellDef>Role</th>
-                <td mat-cell *matCellDef="let user">
-                  <span class="role-badge" [ngClass]="getRoleClass(user.role)">
-                    {{ user.role | titlecase }}
-                  </span>
-                </td>
-              </ng-container>
-
-              <!-- Status Column -->
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let user">
-                  <span class="status-badge" [ngClass]="getStatusClass(user.is_active)">
-                    {{ user.is_active ? 'Active' : 'Inactive' }}
-                  </span>
-                </td>
-              </ng-container>
-
-              <!-- Actions Column -->
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let user">
-                  <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User actions">
-                    <mat-icon>more_vert</mat-icon>
-                  </button>
-                  <mat-menu #userMenu="matMenu">
-                    <button mat-menu-item (click)="viewUserProfile(user.id)">
-                      <mat-icon>visibility</mat-icon> View Profile
-                    </button>
-                    <button mat-menu-item *ngIf="isAdmin" (click)="editUser(user.id)">
-                      <mat-icon>edit</mat-icon> Edit User
-                    </button>
-                    <button mat-menu-item *ngIf="isAdmin" (click)="updateUserRole(user.id, user.name, user.role)">
-                      <mat-icon>assignment_ind</mat-icon> Change Role
-                    </button>
-                    <button mat-menu-item *ngIf="isAdmin" (click)="removeUser(user.id, user.name)">
-                      <mat-icon color="warn">person_remove</mat-icon> Remove from Organization
-                    </button>
-                  </mat-menu>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="userDisplayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: userDisplayedColumns;"></tr>
-            </table>
-          </div>
-        </mat-card-content>
-      </mat-card>
+    <div *ngIf="users.length === 0" class="no-data">
+      <p>No users in this organization</p>
     </div>
   </div>
+</div>
+
+<div class="loading-container" *ngIf="isLoading">
+  <mat-spinner diameter="50"></mat-spinner>
+</div>
+
+<div class="error-container" *ngIf="error">
+  <p class="error-message">{{ error }}</p>
+  <button mat-raised-button color="primary" (click)="loadOrganizationData()">Retry</button>
 </div> 

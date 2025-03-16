@@ -1,0 +1,151 @@
+// Custom Material Theme
+@use '@angular/material' as mat;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Define the palettes for the theme
+$primary-palette: (
+  50: #e9f5e9,
+  100: #c7e6c8,
+  200: #a2d6a4,
+  300: #7dc680,
+  400: #66bb6a, // This is the main color
+  500: #4caf50,
+  600: #43a047,
+  700: #388e3c,
+  800: #2e7d32,
+  900: #1b5e20,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: rgba(0, 0, 0, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$accent-palette: (
+  50: #fee8ef,
+  100: #fcc6d7,
+  200: #fa9fbc,
+  300: #f778a1,
+  400: #f48fb1, // This is the main color
+  500: #ec407a,
+  600: #d81b60,
+  700: #c2185b,
+  800: #ad1457,
+  900: #880e4f,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: rgba(0, 0, 0, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$warn-palette: (
+  50: #ffebee,
+  100: #ffcdd2,
+  200: #ef9a9a,
+  300: #e57373,
+  400: #ef5350,
+  500: #f44336, // This is the main color
+  600: #e53935,
+  700: #d32f2f,
+  800: #c62828,
+  900: #b71c1c,
+  contrast: (
+    50: rgba(0, 0, 0, 0.87),
+    100: rgba(0, 0, 0, 0.87),
+    200: rgba(0, 0, 0, 0.87),
+    300: rgba(0, 0, 0, 0.87),
+    400: rgba(0, 0, 0, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// Create the palettes
+$dark-primary: mat.define-palette($primary-palette, 400);
+$dark-accent: mat.define-palette($accent-palette, 400);
+$dark-warn: mat.define-palette($warn-palette, 500);
+
+// Create the dark theme
+$dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $dark-primary,
+    accent: $dark-accent,
+    warn: $dark-warn,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0,
+));
+
+// Apply the dark theme by default
+@include mat.all-component-themes($dark-theme);
+
+// Define custom background and foreground colors
+$dark-background: #121212;
+$dark-card-background: #1e1e1e;
+$dark-surface: #2a2a2a;
+$dark-text: #f5f5f5;
+
+// Add these colors to the theme
+$custom-theme: map-merge(
+  $dark-theme,
+  (
+    color: (
+      background: (
+        background: $dark-background,
+        card: $dark-card-background,
+        dialog: $dark-card-background,
+        surface: $dark-surface,
+      ),
+      foreground: (
+        text: $dark-text,
+      ),
+    ),
+  )
+);
+
+// Override some Angular Material component styles
+body {
+  background-color: $dark-background;
+  color: $dark-text;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+// Fix for mat-drawer-container background colors
+.mat-drawer-container {
+  background-color: $dark-background !important;
+  color: $dark-text !important;
+}
+
+.mat-drawer-content {
+  background-color: $dark-background !important;
+  color: $dark-text !important;
+}
+
+mat-sidenav-container {
+  background-color: $dark-background !important;
+}
+
+mat-sidenav-content {
+  background-color: $dark-background !important;
+} 

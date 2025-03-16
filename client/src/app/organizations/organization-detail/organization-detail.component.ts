@@ -17,6 +17,8 @@ import { UserAddDialogComponent } from '../user-add-dialog/user-add-dialog.compo
 })
 export class OrganizationDetailComponent implements OnInit {
   organization: Organization | null = null;
+  parentOrganization: Organization | null = null;
+  childOrganizations: Organization[] = [];
   users: any[] = [];
   isLoading = true;
   error: string | null = null;
@@ -43,15 +45,32 @@ export class OrganizationDetailComponent implements OnInit {
     this.error = null;
     const orgId = +this.route.snapshot.paramMap.get('id')!;
 
-    // Load both organization details and its users
+    // Get organization details, users, child organizations
     this.organizationService.getOrganizationById(orgId).pipe(
       switchMap(org => {
         this.organization = org;
-        return this.organizationService.getOrganizationUsers(orgId);
+        
+        // Create observables for all data we need
+        const getUsersObservable = this.organizationService.getOrganizationUsers(orgId);
+        const getChildrenObservable = this.organizationService.getChildOrganizations(orgId);
+        
+        // Get parent organization if exists
+        const getParentObservable = org.parent_organization_id 
+          ? this.organizationService.getOrganizationById(org.parent_organization_id) 
+          : of(null);
+        
+        // Execute all requests in parallel
+        return forkJoin({
+          users: getUsersObservable,
+          children: getChildrenObservable,
+          parent: getParentObservable
+        });
       })
     ).subscribe({
-      next: (users) => {
-        this.users = users;
+      next: (data) => {
+        this.users = data.users;
+        this.childOrganizations = data.children;
+        this.parentOrganization = data.parent;
         this.isLoading = false;
       },
       error: (err) => {
@@ -69,7 +88,15 @@ export class OrganizationDetailComponent implements OnInit {
 
     const dialogRef = this.dialog.open(OrganizationEditDialogComponent, {
       width: '600px',
-      data: { organization: this.organization }
+      maxWidth: '90vw',
+      data: { organization: this.organization },
+      disableClose: false,
+      autoFocus: true,
+      position: {
+        top: '10vh',
+        left: '50%'
+      },
+      panelClass: 'centered-dialog'
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -78,6 +105,7 @@ export class OrganizationDetailComponent implements OnInit {
           next: (updatedOrg) => {
             this.organization = updatedOrg;
             this.snackBar.open('Organization updated successfully', 'Close', { duration: 3000 });
+            this.loadOrganizationData(); // Reload to update parent/child relationships
           },
           error: (err) => {
             const errorMsg = err.error?.message || 'Failed to update organization';

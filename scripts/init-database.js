@@ -18,7 +18,13 @@ const initializeDatabase = async () => {
     
     // Read SQL schema file
     const schemaPath = path.join(__dirname, '../app/utils/database.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
+    let schema = fs.readFileSync(schemaPath, 'utf8');
+    
+    // Modify CREATE TABLE statements to include IF NOT EXISTS
+    schema = schema.replace(/CREATE TABLE (?!IF NOT EXISTS)/g, 'CREATE TABLE IF NOT EXISTS ');
+    
+    // Modify CREATE INDEX statements to include IF NOT EXISTS
+    schema = schema.replace(/CREATE INDEX (?!IF NOT EXISTS)/g, 'CREATE INDEX IF NOT EXISTS ');
     
     // Execute SQL schema
     await client.query(schema);

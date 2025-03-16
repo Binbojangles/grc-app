@@ -9,6 +9,8 @@ export interface Organization {
   industry?: string | null;
   size?: string | null;
   cmmc_target_level: string;
+  parent_organization_id?: number | null;
+  children?: Organization[];
   created_at: string;
   updated_at: string;
 }
@@ -18,6 +20,7 @@ export interface OrganizationCreateDto {
   industry?: string;
   size?: string;
   cmmc_target_level: string;
+  parent_organization_id?: number | null;
 }
 
 export interface OrganizationUpdateDto {
@@ -25,6 +28,7 @@ export interface OrganizationUpdateDto {
   industry?: string;
   size?: string;
   cmmc_target_level?: string;
+  parent_organization_id?: number | null;
 }
 
 @Injectable({
@@ -41,6 +45,14 @@ export class OrganizationService {
 
   getOrganizationById(id: number): Observable<Organization> {
     return this.http.get<Organization>(`${this.apiUrl}/${id}`);
+  }
+
+  getOrganizationHierarchy(): Observable<Organization[]> {
+    return this.http.get<Organization[]>(`${this.apiUrl}/hierarchy`);
+  }
+
+  getChildOrganizations(parentId: number): Observable<Organization[]> {
+    return this.http.get<Organization[]>(`${this.apiUrl}/${parentId}/children`);
   }
 
   createOrganization(organization: OrganizationCreateDto): Observable<Organization> {

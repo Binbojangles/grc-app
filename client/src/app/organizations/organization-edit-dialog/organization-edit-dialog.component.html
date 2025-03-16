@@ -1,10 +1,11 @@
-<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<h2 mat-dialog-title class="dialog-title">{{ dialogTitle }}</h2>
 
 <form [formGroup]="organizationForm" (ngSubmit)="onSubmit()">
   <div mat-dialog-content>
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Organization Name</mat-label>
       <input matInput formControlName="name" placeholder="Enter organization name" required>
+      <mat-icon matPrefix>business</mat-icon>
       <mat-error *ngIf="organizationForm.get('name')?.hasError('required')">
         Organization name is required
       </mat-error>
@@ -16,6 +17,7 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Industry</mat-label>
       <input matInput formControlName="industry" placeholder="Enter industry">
+      <mat-icon matPrefix>category</mat-icon>
       <mat-error *ngIf="organizationForm.get('industry')?.hasError('maxlength')">
         Industry cannot exceed 100 characters
       </mat-error>
@@ -30,6 +32,7 @@
         <mat-option value="Large (251-1000)">Large (251-1000)</mat-option>
         <mat-option value="Enterprise (1000+)">Enterprise (1000+)</mat-option>
       </mat-select>
+      <mat-icon matPrefix>people</mat-icon>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
@@ -37,13 +40,24 @@
       <mat-select formControlName="cmmc_target_level" required>
         <mat-option *ngFor="let level of cmmcLevels" [value]="level">{{ level }}</mat-option>
       </mat-select>
+      <mat-icon matPrefix>security</mat-icon>
       <mat-error *ngIf="organizationForm.get('cmmc_target_level')?.hasError('required')">
         CMMC target level is required
       </mat-error>
     </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Parent Organization</mat-label>
+      <mat-select formControlName="parent_organization_id">
+        <mat-option [value]="null">None (Root Organization)</mat-option>
+        <mat-option *ngFor="let org of parentOrgOptions" [value]="org.id">{{ org.name }}</mat-option>
+      </mat-select>
+      <mat-icon matPrefix>account_tree</mat-icon>
+      <mat-hint>Select a parent organization to create a hierarchy</mat-hint>
+    </mat-form-field>
   </div>
 
-  <div mat-dialog-actions align="end">
+  <div mat-dialog-actions>
     <button mat-button type="button" (click)="onCancel()">Cancel</button>
     <button mat-raised-button color="primary" type="submit" [disabled]="organizationForm.invalid">
       {{ isEditMode ? 'Update' : 'Create' }}

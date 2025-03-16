@@ -11,9 +11,10 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
-  isLoading = false;
+  isSubmitting = false;
   hidePassword = true;
   returnUrl: string = '/';
+  error: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -43,7 +44,8 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
+    this.error = null;
+    this.isSubmitting = true;
     const { email, password } = this.loginForm.value;
     
     this.authService.login(email, password)
@@ -52,12 +54,9 @@ export class LoginComponent implements OnInit {
           this.router.navigate([this.returnUrl]);
         },
         error: (error) => {
-          this.isLoading = false;
-          this.snackBar.open(
-            error.message || 'Login failed. Please check your credentials.',
-            'Close',
-            { duration: 5000 }
-          );
+          this.isSubmitting = false;
+          this.error = error.message || 'Login failed. Please check your credentials.';
+          this.snackBar.open(this.error as string, 'Close', { duration: 5000 });
         }
       });
   }

@@ -16,6 +16,7 @@ import { NotFoundComponent } from './shared/not-found/not-found.component';
 import { UserListComponent } from './users/user-list/user-list.component';
 import { OrganizationListComponent } from './organizations/organization-list/organization-list.component';
 import { OrganizationDetailComponent } from './organizations/organization-detail/organization-detail.component';
+import { DepartmentListComponent } from './departments/department-list/department-list.component';
 
 // Guards
 import { AuthGuard } from './core/guards/auth.guard';
@@ -38,6 +39,7 @@ const routes: Routes = [
       { path: 'users', component: UserListComponent },
       { path: 'organizations', component: OrganizationListComponent },
       { path: 'organizations/:id', component: OrganizationDetailComponent },
+      { path: 'departments', component: DepartmentListComponent },
     ]
   },
   { path: '404', component: NotFoundComponent },

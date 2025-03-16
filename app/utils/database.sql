@@ -20,9 +20,25 @@ CREATE TABLE organizations (
   industry VARCHAR(100),
   size VARCHAR(50),
   cmmc_target_level VARCHAR(50) NOT NULL,
+  parent_organization_id INTEGER REFERENCES organizations(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Department Structure
+CREATE TABLE departments (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  organization_id INTEGER REFERENCES organizations(id) NOT NULL,
+  parent_department_id INTEGER REFERENCES departments(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add department_id to users table
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS department_id INTEGER REFERENCES departments(id);
 
 -- CMMC Domains and Controls Structure
 CREATE TABLE domains (
@@ -163,4 +179,6 @@ CREATE INDEX idx_assessments_org ON assessments(organization_id);
 CREATE INDEX idx_assessment_controls_assessment ON assessment_controls(assessment_id);
 CREATE INDEX idx_evidence_assessment_control ON evidence(assessment_control_id);
 CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
-CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp); 
+CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
+CREATE INDEX idx_departments_organization ON departments(organization_id);
+CREATE INDEX idx_departments_parent ON departments(parent_department_id); 

@@ -32,6 +32,10 @@
           <mat-icon>assessment</mat-icon>
           <span>Assessments</span>
         </a>
+        <a mat-list-item routerLink="/departments" routerLinkActive="active">
+          <mat-icon>account_tree</mat-icon>
+          <span>Departments</span>
+        </a>
         <a mat-list-item routerLink="/users" routerLinkActive="active">
           <mat-icon>people</mat-icon>
           <span>Users</span>
@@ -44,7 +48,7 @@
     </mat-sidenav>
 
     <mat-sidenav-content class="content">
-      <div class="content-wrapper">
+      <div class="content-wrapper dark-bg">
         <router-outlet></router-outlet>
       </div>
     </mat-sidenav-content>

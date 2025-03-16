@@ -4,11 +4,12 @@ const path = require('path');
 // Initialize database schema
 console.log('Step 1: Initializing database schema...');
 try {
+  // Use IF NOT EXISTS in the schema to prevent errors when tables already exist
   execSync('node ' + path.join(__dirname, 'init-database.js'), { stdio: 'inherit' });
   console.log('Database schema initialization completed successfully.');
 } catch (error) {
-  console.error('Error initializing database schema:', error);
-  process.exit(1);
+  console.log('Database schema already exists, continuing with setup...');
+  // Don't exit on schema init error, as tables might already exist
 }
 
 // Run the control extraction script

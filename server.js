@@ -45,6 +45,8 @@ app.use('/api/domains', require('./app/routes/domainRoutes'));
 app.use('/api/controls', require('./app/routes/controlRoutes'));
 app.use('/api/users', require('./app/routes/userRoutes'));
 app.use('/api/organizations', require('./app/routes/organizationRoutes'));
+app.use('/api/departments', require('./app/routes/departmentRoutes'));
+app.use('/api/utility', require('./app/routes/utilityRoutes'));
 // app.use('/api/assets', require('./app/routes/assets'));
 // app.use('/api/policies', require('./app/routes/policies'));
 
