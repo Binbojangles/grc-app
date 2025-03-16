@@ -1,0 +1,105 @@
+<div class="dashboard-container">
+  <h1 class="page-title">Dashboard</h1>
+
+  <!-- Compliance Summary Section -->
+  <div class="dashboard-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Compliance Summary</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="compliance-overview">
+          <div class="overall-compliance">
+            <div class="progress-circle">
+              <div class="progress-value">{{ complianceSummary.overall }}%</div>
+            </div>
+            <div class="progress-label">Overall Compliance</div>
+          </div>
+          <div class="domain-compliance">
+            <div *ngFor="let domain of complianceSummary.byDomain.slice(0, 6)" class="domain-item">
+              <div class="domain-name">{{ domain.name }}</div>
+              <mat-progress-bar mode="determinate" [value]="domain.value"></mat-progress-bar>
+              <div class="domain-value">{{ domain.value }}%</div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Risk Summary and Recent Activities -->
+  <div class="dashboard-row">
+    <div class="dashboard-column">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Risk Summary</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="risk-summary">
+            <div class="risk-item high">
+              <div class="risk-count">{{ riskSummary.high }}</div>
+              <div class="risk-label">High</div>
+            </div>
+            <div class="risk-item medium">
+              <div class="risk-count">{{ riskSummary.medium }}</div>
+              <div class="risk-label">Medium</div>
+            </div>
+            <div class="risk-item low">
+              <div class="risk-count">{{ riskSummary.low }}</div>
+              <div class="risk-label">Low</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="dashboard-column">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Recent Activities</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list>
+            <mat-list-item *ngFor="let activity of recentActivities">
+              <div matListItemTitle>{{ activity.name }}</div>
+              <div matListItemLine>
+                <span class="activity-type">{{ activity.type }}</span> - 
+                <span class="activity-status">{{ activity.status }}</span>
+              </div>
+              <div matListItemMeta>{{ activity.date | date:'MMM d, y' }}</div>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="dashboard-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Quick Actions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="quick-actions">
+          <button mat-raised-button color="primary" routerLink="/assessments">
+            <mat-icon>assessment</mat-icon>
+            Start Assessment
+          </button>
+          <button mat-raised-button color="accent" routerLink="/policies">
+            <mat-icon>policy</mat-icon>
+            Manage Policies
+          </button>
+          <button mat-raised-button color="warn" routerLink="/controls">
+            <mat-icon>security</mat-icon>
+            Review Controls
+          </button>
+          <button mat-raised-button routerLink="/assets">
+            <mat-icon>devices</mat-icon>
+            Manage Assets
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div> 

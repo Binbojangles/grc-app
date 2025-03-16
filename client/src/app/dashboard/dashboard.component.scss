@@ -1,0 +1,159 @@
+.dashboard-container {
+  padding: 16px;
+}
+
+.page-title {
+  margin-bottom: 24px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.dashboard-section {
+  margin-bottom: 24px;
+}
+
+.dashboard-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.dashboard-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.compliance-overview {
+  display: flex;
+  gap: 32px;
+}
+
+.overall-compliance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 150px;
+}
+
+.progress-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: conic-gradient(#1976d2 0% calc(var(--value) * 1%), #e0e0e0 calc(var(--value) * 1%) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  --value: 68;
+}
+
+.progress-circle::before {
+  content: '';
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: white;
+}
+
+.progress-value {
+  position: relative;
+  font-size: 24px;
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.progress-label {
+  margin-top: 16px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.domain-compliance {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.domain-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.domain-name {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.domain-value {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: right;
+}
+
+.risk-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: 16px 0;
+}
+
+.risk-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.risk-count {
+  font-size: 32px;
+  font-weight: 500;
+}
+
+.risk-label {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.risk-item.high {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+}
+
+.risk-item.medium {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #f57c00;
+}
+
+.risk-item.low {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #388e3c;
+}
+
+.activity-type {
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.activity-status {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+@media (max-width: 960px) {
+  .compliance-overview {
+    flex-direction: column;
+  }
+  
+  .dashboard-row {
+    flex-direction: column;
+  }
+} 
